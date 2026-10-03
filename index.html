@@ -35,6 +35,12 @@
     --radius-sm: 6px;
     --radius-md: 10px;
     --shadow: 0 1px 0 rgba(22,33,29,0.04);
+    --grad-a: #0E7C63;
+    --grad-b: #1F6FA8;
+    --grad: linear-gradient(120deg, var(--grad-a), var(--grad-b));
+    --on-accent: #FFFFFF;
+    --glow: rgba(14,124,99,0.28);
+    --spot: rgba(14,124,99,0.10);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
@@ -51,6 +57,11 @@
       --warm: #E0975B;
       --warm-soft: #33261A;
       --before: #E0897B;
+      --grad-a: #38C9A3;
+      --grad-b: #5AB0EE;
+      --on-accent: #05221B;
+      --glow: rgba(56,201,163,0.25);
+      --spot: rgba(56,201,163,0.10);
       color-scheme: dark;
     }
   }
@@ -67,6 +78,11 @@
     --warm: #E0975B;
     --warm-soft: #33261A;
     --before: #E0897B;
+    --grad-a: #38C9A3;
+    --grad-b: #5AB0EE;
+    --on-accent: #05221B;
+    --glow: rgba(56,201,163,0.25);
+    --spot: rgba(56,201,163,0.10);
     color-scheme: dark;
   }
 
@@ -75,7 +91,7 @@
     scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
     scroll-behavior: smooth;
   }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
     background: var(--bg);
@@ -85,6 +101,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
     -webkit-font-smoothing: antialiased;
     line-height: 1.5;
+    overflow-x: clip;
   }
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
@@ -108,7 +125,9 @@
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
+    transition: box-shadow .2s ease;
   }
+  header.topnav.scrolled { box-shadow: 0 8px 24px -18px rgba(0,0,0,0.35); }
   .topnav-inner {
     max-width: 1080px; margin: 0 auto; padding: 14px 28px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
@@ -152,7 +171,7 @@
     :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
     :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
   }
-  .progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+  .progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--grad); transform-origin: 0 50%; transform: scaleX(0); }
   @media (max-width: 1000px) { .topnav-links { gap: 16px; font-size: 0.88rem; } }
   @media (max-width: 860px) {
     .topnav-inner { flex-wrap: wrap; row-gap: 8px; padding-bottom: 0; }
@@ -174,16 +193,50 @@
   }
 
   /* ---------- Hero ---------- */
-  .hero { padding-top: 64px; padding-bottom: 72px; }
+  .hero { padding-top: 64px; padding-bottom: 48px; position: relative; isolation: isolate; }
+  /* Soft aurora + dot grid behind the hero, bleeding to the viewport edges */
+  .hero::before, .hero::after {
+    content: ""; position: absolute; z-index: -1; pointer-events: none;
+    top: -120px; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+  }
+  .hero::before {
+    background:
+      radial-gradient(40% 55% at 82% 18%, color-mix(in srgb, var(--grad-b) 22%, transparent), transparent 70%),
+      radial-gradient(38% 50% at 12% 8%, color-mix(in srgb, var(--grad-a) 20%, transparent), transparent 70%),
+      radial-gradient(30% 40% at 55% 70%, color-mix(in srgb, var(--warm) 10%, transparent), transparent 70%);
+    filter: blur(10px);
+    animation: aurora 18s ease-in-out infinite alternate;
+  }
+  .hero::after {
+    background-image: radial-gradient(color-mix(in srgb, var(--ink) 14%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(70% 60% at 50% 30%, #000, transparent 75%);
+    -webkit-mask-image: radial-gradient(70% 60% at 50% 30%, #000, transparent 75%);
+  }
+  @keyframes aurora {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-48%) scale(1.06); }
+    100% { transform: translateX(-52%) scale(1.02); }
+  }
+  .grad-text {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .live-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+  .live-dot::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor;
+    animation: ping 1.8s cubic-bezier(0,0,.2,1) infinite;
+  }
+  @keyframes ping { 75%, 100% { transform: scale(2.6); opacity: 0; } }
   .hero-grid {
     display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: start;
   }
   @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
 
   .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
-  .eyebrow-role { color: var(--accent-ink); background: var(--accent-soft); display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 0.86rem; margin-bottom: 0; }
+  .eyebrow-role { color: var(--accent-ink); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 0.86rem; margin-bottom: 0; }
   .eyebrow-role svg { width: 14px; height: 14px; }
-  .eyebrow-avail { color: var(--warm); background: var(--warm-soft); display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 0.86rem; }
+  .eyebrow-avail { color: var(--warm); background: var(--warm-soft); border: 1px solid color-mix(in srgb, var(--warm) 25%, transparent); display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 0.86rem; }
   .eyebrow-avail svg { width: 14px; height: 14px; }
 
   .hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); line-height: 1.12; max-width: 15ch; }
@@ -198,15 +251,19 @@
     border: 1px solid var(--line); transition: transform .15s ease, background .15s ease, border-color .15s ease;
   }
   .btn svg { width: 16px; height: 16px; flex: none; }
-  .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .btn-primary:hover { transform: translateY(-1px); }
-  .btn-ghost { background: transparent; color: var(--ink); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn { transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .2s ease, color .15s ease; }
+  .btn-primary { background: var(--grad); color: var(--on-accent); border-color: transparent; box-shadow: 0 6px 20px -8px var(--glow); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -10px var(--glow); }
+  .btn-ghost { background: color-mix(in srgb, var(--panel) 70%, transparent); color: var(--ink); backdrop-filter: blur(6px); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
 
   /* Test-run panel */
   .runner {
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
-    padding: 22px 22px 20px; box-shadow: var(--shadow);
+    border: 1px solid transparent; border-radius: 14px;
+    background: linear-gradient(var(--panel), var(--panel)) padding-box,
+                linear-gradient(140deg, color-mix(in srgb, var(--grad-a) 70%, transparent), var(--line) 40%, var(--line) 60%, color-mix(in srgb, var(--grad-b) 70%, transparent)) border-box;
+    padding: 22px 22px 20px;
+    box-shadow: 0 24px 60px -32px var(--glow), 0 2px 6px -2px rgba(0,0,0,0.06);
   }
   .runner-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -229,12 +286,71 @@
   ul.checks li .figure { font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; color: var(--accent-ink); background: var(--accent-soft); padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
   @keyframes checkIn { to { opacity: 1; transform: translateY(0); } }
 
+  /* ---------- Stack ticker ---------- */
+  .marquee {
+    margin-top: 56px; overflow: hidden; position: relative;
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .marquee-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); text-align: center; margin: 56px 0 14px; }
+  .marquee-label + .marquee { margin-top: 0; }
+  .marquee-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee-group { display: flex; gap: 10px; padding-right: 10px; }
+  .marquee-item {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; color: var(--ink-soft); white-space: nowrap;
+    padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px;
+    background: color-mix(in srgb, var(--panel) 75%, transparent);
+  }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee { mask-image: none; -webkit-mask-image: none; }
+    .marquee-track { width: auto; animation: none; }
+    .marquee-group { flex-wrap: wrap; justify-content: center; }
+    .marquee-group[aria-hidden] { display: none; }
+  }
+
+  /* ---------- Section kicker ---------- */
+  .kicker {
+    display: inline-flex; align-items: center; gap: 10px; margin: 0 0 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .kicker::before { content: ""; width: 22px; height: 2px; border-radius: 2px; background: var(--grad); }
+
+  /* ---------- Spotlight cards: a soft glow follows the pointer ---------- */
+  .impact-cell, .ai-card, .cred-card, .contact-row {
+    background-image: radial-gradient(360px circle at var(--mx, -500px) var(--my, -500px), var(--spot), transparent 60%);
+  }
+
   /* ---------- Impact grid ---------- */
-  .impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
-  @media (max-width: 760px) { .impact-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 480px) { .impact-grid { grid-template-columns: 1fr; } }
-  .impact-cell { background: var(--panel); padding: 26px 22px; transition: background .15s ease; }
-  .impact-cell:hover { background: color-mix(in srgb, var(--accent-soft) 45%, var(--panel)); }
+  .impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .impact-cell {
+    background-color: var(--panel); padding: 26px 22px; border: 1px solid var(--line); border-radius: 14px;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .impact-cell:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-2px); box-shadow: 0 14px 32px -20px var(--glow); }
+  .impact-cell.feature {
+    grid-column: span 2; grid-row: span 2; padding: 34px 32px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    background-color: color-mix(in srgb, var(--accent-soft) 55%, var(--panel));
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+    position: relative; overflow: hidden;
+  }
+  .impact-cell.feature::before {
+    content: ""; position: absolute; right: -80px; top: -80px; width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--grad-b) 22%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .impact-cell.feature .impact-stat { font-size: clamp(3rem, 7vw, 4.6rem); line-height: 1; font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.03em; }
+  .impact-cell.feature .impact-label { font-size: 1.15rem; margin-top: 14px; }
+  .impact-cell.feature .impact-detail { font-size: 0.94rem; max-width: 44ch; color: var(--ink-soft); }
+  @media (max-width: 760px) {
+    .impact-grid { grid-template-columns: repeat(2, 1fr); }
+    .impact-cell.feature { grid-row: auto; }
+  }
+  @media (max-width: 480px) { .impact-grid { grid-template-columns: 1fr; } .impact-cell.feature { grid-column: auto; } }
+  @media (max-width: 760px) and (min-width: 481px) { .impact-cell:last-child { grid-column: span 2; } }
   .impact-stat { font-family: 'IBM Plex Mono', monospace; font-size: 1.7rem; color: var(--ink); }
   .impact-stat .before { color: var(--before); text-decoration: line-through; text-decoration-thickness: 1.5px; font-size: 0.75em; margin-right: 6px; }
   .impact-stat .arrow-plain { color: var(--ink-faint); font-size: 0.7em; margin: 0 4px; }
@@ -242,7 +358,8 @@
   .impact-detail { margin-top: 4px; font-size: 0.86rem; color: var(--ink-faint); }
 
   /* ---------- Experience accordion ---------- */
-  .role-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 28px 28px 8px; box-shadow: var(--shadow); }
+  .role-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px 28px 8px; box-shadow: 0 18px 50px -36px var(--glow); position: relative; overflow: hidden; }
+  .role-card::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--grad); }
   .role-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
   .role-title { font-family: 'Fraunces', serif; font-size: 1.25rem; }
   .role-company { color: var(--ink-soft); margin-top: 4px; font-size: 0.98rem; }
@@ -264,6 +381,8 @@
   .acc-trigger .plus::before { top: 9px; left: 2px; right: 2px; height: 2px; }
   .acc-trigger .plus::after { left: 9px; top: 2px; bottom: 2px; width: 2px; }
   .acc-item.open .plus::after { transform: rotate(90deg); opacity: 0; }
+  .acc-item.open .acc-trigger { color: var(--accent-ink); }
+  .acc-item.open .plus::before { background: var(--accent); }
   .acc-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
   .acc-item.open .acc-panel { grid-template-rows: 1fr; }
   .acc-panel > .acc-panel-inner { overflow: hidden; min-height: 0; }
@@ -279,22 +398,28 @@
   /* ---------- AI toolkit ---------- */
   .ai-banner {
     display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline;
-    background: var(--ink); color: var(--bg); border-radius: var(--radius-md);
-    padding: 24px 28px; margin-bottom: 28px;
+    background:
+      radial-gradient(60% 140% at 100% 0%, color-mix(in srgb, var(--grad-b) 45%, transparent), transparent 60%),
+      radial-gradient(50% 120% at 0% 100%, color-mix(in srgb, var(--grad-a) 40%, transparent), transparent 60%),
+      var(--ink);
+    color: var(--bg); border-radius: 14px;
+    padding: 26px 30px; margin-bottom: 28px;
   }
   .ai-banner-stat { font-size: 0.94rem; color: color-mix(in srgb, var(--bg) 70%, transparent); }
-  .ai-banner-stat span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 1.5rem; color: var(--bg); margin-bottom: 2px; }
+  .ai-banner-stat span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 1.7rem; font-weight: 600; color: var(--bg); margin-bottom: 2px; }
   .ai-banner-div { width: 1px; align-self: stretch; background: color-mix(in srgb, var(--bg) 20%, transparent); }
   @media (max-width: 700px) { .ai-banner-div { display: none; } }
 
   .ai-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
   @media (max-width: 700px) { .ai-grid { grid-template-columns: 1fr; } }
   .ai-card {
-    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    border-radius: var(--radius-sm); padding: 20px 22px; box-shadow: var(--shadow);
-    transition: transform .18s ease, box-shadow .18s ease;
+    background-color: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    position: relative; overflow: hidden;
   }
-  .ai-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -12px rgba(22,33,29,0.25); }
+  .ai-card::before { content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 3px 3px 0; background: var(--grad); }
+  .ai-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); box-shadow: 0 16px 34px -20px var(--glow); }
   .ai-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
   .ai-tool-name { font-family: 'Fraunces', serif; font-size: 1.05rem; color: var(--ink); }
   .ai-tag { font-size: 0.78rem; color: var(--accent-ink); background: var(--accent-soft); padding: 3px 9px; border-radius: 5px; white-space: nowrap; }
@@ -308,8 +433,8 @@
   }
   .tab-btn { transition: border-color .15s ease, color .15s ease; }
   .tab-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
-  .tab-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .tab-panel { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 26px 28px; box-shadow: var(--shadow); }
+  .tab-btn.active { background: var(--grad); color: var(--on-accent); border-color: transparent; box-shadow: 0 6px 18px -8px var(--glow); }
+  .tab-panel { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px; box-shadow: var(--shadow); }
   .tab-panel.active { display: block; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
   .tab-panel h3 { font-size: 1.1rem; margin-bottom: 12px; }
@@ -321,43 +446,71 @@
   @media (max-width: 700px) { .skills-grid { grid-template-columns: 1fr; } }
   .skill-group h3 { font-size: 0.92rem; color: var(--ink-faint); font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; margin-bottom: 10px; }
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chip { font-size: 0.85rem; padding: 5px 11px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); }
+  .chip { font-size: 0.85rem; padding: 5px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); transition: border-color .15s ease, color .15s ease, transform .15s ease, background-color .15s ease; }
+  .chip:hover { border-color: var(--accent); color: var(--accent-ink); background-color: var(--accent-soft); transform: translateY(-1px); }
+  .skill-group h3 { display: flex; align-items: center; gap: 8px; }
+  .skill-group h3::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--grad); }
 
   /* ---------- Certs / education ---------- */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
-  .cred-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 22px 24px; }
+  .cred-card { background-color: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px 26px; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .cred-card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); transform: translateY(-2px); box-shadow: 0 14px 32px -20px var(--glow); }
   .cred-kind { font-size: 0.82rem; color: var(--warm); font-weight: 600; }
   .cred-name { font-family: 'Fraunces', serif; font-size: 1.1rem; margin-top: 6px; }
   .cred-org { color: var(--ink-soft); margin-top: 4px; font-size: 0.92rem; }
 
-  /* ---------- Contact ---------- */
-  .contact-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
-  @media (max-width: 900px) { .contact-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 560px) { .contact-grid { grid-template-columns: repeat(2, 1fr); } }
-  /* Fill the grid with no empty trailing cell at each breakpoint */
-  @media (max-width: 900px) and (min-width: 561px) { .contact-grid > :last-child { grid-column: span 2; } }
-  @media (max-width: 560px) { .contact-grid > :first-child { grid-column: 1 / -1; } }
-  .contact-cell {
-    background: var(--panel); padding: 26px 20px; text-decoration: none; color: var(--ink);
-    display: flex; flex-direction: column; gap: 12px; transition: background .15s ease;
+  /* ---------- Contact: closing call-to-action panel ---------- */
+  .cta-panel {
+    position: relative; overflow: hidden; isolation: isolate;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center;
+    padding: 48px; border-radius: 20px; border: 1px solid transparent;
+    background:
+      linear-gradient(var(--panel), var(--panel)) padding-box,
+      linear-gradient(140deg, color-mix(in srgb, var(--grad-a) 70%, transparent), var(--line) 40%, var(--line) 60%, color-mix(in srgb, var(--grad-b) 70%, transparent)) border-box;
+    box-shadow: 0 30px 70px -40px var(--glow);
   }
-  .contact-cell:hover { background: var(--accent-soft); }
-  .contact-cell svg { width: 20px; height: 20px; color: var(--accent); }
-  .contact-cell .c-label { font-size: 0.8rem; color: var(--ink-faint); }
-  .contact-cell .c-value { font-size: 0.94rem; font-weight: 500; word-break: break-word; }
+  .cta-panel::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(45% 70% at 0% 0%, color-mix(in srgb, var(--grad-a) 14%, transparent), transparent 70%),
+      radial-gradient(45% 70% at 100% 100%, color-mix(in srgb, var(--grad-b) 14%, transparent), transparent 70%);
+  }
+  .cta-intro h2 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
+  .cta-intro .section-note { margin-bottom: 28px; }
+  .cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .cta-avail { display: flex; align-items: center; gap: 10px; margin: 22px 0 0; font-size: 0.92rem; color: var(--warm); }
 
-  .contact-cell { position: relative; }
+  .contact-list { display: flex; flex-direction: column; gap: 10px; }
+  .contact-row {
+    position: relative; display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 14px; text-decoration: none; color: var(--ink);
+    background-color: color-mix(in srgb, var(--bg) 55%, var(--panel)); border: 1px solid var(--line);
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  a.contact-row:hover, .contact-row:has(.stretched):hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateX(3px); box-shadow: 0 12px 28px -20px var(--glow); }
+  .contact-row > svg:first-child {
+    flex: none; width: 40px; height: 40px; padding: 10px; border-radius: 10px;
+    color: var(--accent); background: var(--accent-soft); transition: background .2s ease, color .2s ease;
+  }
+  a.contact-row:hover > svg:first-child, .contact-row:has(.stretched):hover > svg:first-child { background: var(--grad); color: var(--on-accent); }
+  .contact-row .c-text { min-width: 0; flex: 1; }
+  .contact-row .c-label { font-size: 0.78rem; color: var(--ink-faint); }
+  .contact-row .c-value { font-size: 0.98rem; font-weight: 500; overflow-wrap: anywhere; }
+  .contact-row a.c-value { text-decoration: none; color: inherit; }
+  .contact-row .c-go { flex: none; width: 16px; height: 16px; color: var(--ink-faint); transition: color .2s ease, transform .2s ease; }
+  a.contact-row:hover .c-go { color: var(--accent); transform: translate(2px, -2px); }
+  .stretched::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
   .copy-btn {
-    position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 6px;
+    position: relative; z-index: 1; flex: none; width: 32px; height: 32px; border-radius: 8px;
     border: 1px solid var(--line); background: var(--panel); color: var(--ink-faint);
     display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
   }
-  .contact-cell a.c-value { text-decoration: none; color: inherit; }
-  .stretched::after { content: ""; position: absolute; inset: 0; }
-  .copy-btn { z-index: 1; }
   .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
-  .copy-btn svg { width: 14px; height: 14px; color: inherit; }
+  .copy-btn svg { width: 14px; height: 14px; }
+  @media (max-width: 860px) { .cta-panel { grid-template-columns: 1fr; gap: 32px; padding: 36px 28px; } }
+  @media (max-width: 560px) { .cta-panel { padding: 28px 18px; border-radius: 16px; } }
 
   footer { padding: 32px 0 48px; text-align: center; color: var(--ink-faint); font-size: 0.86rem; }
 
@@ -388,14 +541,18 @@
 
   @media print {
     :root { --bg: #fff; --panel: #fff; }
-    header.topnav, .hero-ctas, .runner, .tabbar, .acc-toolbar, .to-top, .toast, .copy-btn, .avatar-lightbox, .acc-trigger .plus { display: none !important; }
+    .hero::before, .hero::after, .marquee, .marquee-label, .kicker, .role-card::before, .ai-card::before,
+    header.topnav, .hero-ctas, .cta-actions, .runner, .tabbar, .acc-toolbar, .to-top, .toast, .copy-btn, .avatar-lightbox, .acc-trigger .plus { display: none !important; }
     section { padding: 20px 0; break-inside: avoid-page; }
     .js .reveal { opacity: 1; transform: none; }
+    .grad-text { -webkit-text-fill-color: currentColor; color: var(--accent); }
     .acc-panel { grid-template-rows: 1fr !important; }
     .tab-panel { display: block !important; margin-bottom: 10px; box-shadow: none; }
     .ai-banner { background: #fff; color: #000; border: 1px solid var(--line); }
     .ai-banner-stat, .ai-banner-stat span { color: #000; }
     a { text-decoration: none; }
+    .cta-panel { box-shadow: none; border: 1px solid var(--line); padding: 20px; }
+    .contact-row .c-go { display: none; }
   }
 </style>
 </head>
@@ -436,16 +593,16 @@
             Open to QA Automation Lead &amp; Scrum Master roles
           </span>
           <span class="eyebrow-avail">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="live-dot" aria-hidden="true"></span>
             Immediately available to join
           </span>
         </div>
-        <h1>100+ releases across five marketplaces — I own the QA on all of them.</h1>
+        <h1><span class="grad-text">100+ releases</span> across five marketplaces — I own the QA on all of them.</h1>
         <p class="hero-sub">Senior Software QA Engineer I and Certified Scrum Master with 7+ years leading test strategy, automation and Agile delivery across five independent marketplace integrations.</p>
         <p class="hero-meta">Celigo, Hyderabad — Jan 2019 to Sept 2026</p>
         <div class="hero-ctas">
           <a class="btn btn-primary" href="mailto:sashikanta397@gmail.com?subject=Reaching%20out%20from%20your%20resume%20site">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
             Email me
           </a>
           <a class="btn btn-ghost" href="https://www.linkedin.com/in/sashikanta-behera" target="_blank" rel="noopener">
@@ -479,15 +636,23 @@
         <div class="runner-summary" id="runner-summary" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--line);"></div>
       </div>
     </div>
+    <p class="marquee-label">Tools &amp; platforms I work with</p>
+    <div class="marquee">
+      <div class="marquee-track">
+        <div class="marquee-group"><span class="marquee-item">Playwright</span><span class="marquee-item">TypeScript</span><span class="marquee-item">Node.js</span><span class="marquee-item">REST</span><span class="marquee-item">GraphQL</span><span class="marquee-item">Postman</span><span class="marquee-item">Selenium</span><span class="marquee-item">Jenkins</span><span class="marquee-item">GitHub Actions</span><span class="marquee-item">Splunk MCP</span><span class="marquee-item">Zephyr MCP</span><span class="marquee-item">GitHub MCP</span><span class="marquee-item">SQL</span><span class="marquee-item">NetSuite</span><span class="marquee-item">Amazon</span><span class="marquee-item">Shopify</span><span class="marquee-item">eBay</span><span class="marquee-item">Walmart</span><span class="marquee-item">Magento 2</span><span class="marquee-item">Jira</span><span class="marquee-item">Cursor</span><span class="marquee-item">Claude</span></div>
+        <div class="marquee-group" aria-hidden="true"><span class="marquee-item">Playwright</span><span class="marquee-item">TypeScript</span><span class="marquee-item">Node.js</span><span class="marquee-item">REST</span><span class="marquee-item">GraphQL</span><span class="marquee-item">Postman</span><span class="marquee-item">Selenium</span><span class="marquee-item">Jenkins</span><span class="marquee-item">GitHub Actions</span><span class="marquee-item">Splunk MCP</span><span class="marquee-item">Zephyr MCP</span><span class="marquee-item">GitHub MCP</span><span class="marquee-item">SQL</span><span class="marquee-item">NetSuite</span><span class="marquee-item">Amazon</span><span class="marquee-item">Shopify</span><span class="marquee-item">eBay</span><span class="marquee-item">Walmart</span><span class="marquee-item">Magento 2</span><span class="marquee-item">Jira</span><span class="marquee-item">Cursor</span><span class="marquee-item">Claude</span></div>
+      </div>
+    </div>
   </section>
 
   <!-- IMPACT -->
   <section id="impact">
+    <p class="kicker">01 / Impact</p>
     <h2>Impact highlights</h2>
     <p class="section-note">The headline numbers behind seven years of QA work — where they moved from, and what moved them.</p>
     <div class="impact-grid">
-      <div class="impact-cell">
-        <div class="impact-stat">100+</div>
+      <div class="impact-cell feature">
+        <div class="impact-stat"><span class="grad-text" data-count="100" data-suffix="+">100+</span></div>
         <div class="impact-label">Releases with defect escape held under 5%</div>
         <div class="impact-detail">Across Amazon, eBay, Walmart, Shopify and Magento 2 integrations with NetSuite</div>
       </div>
@@ -507,12 +672,12 @@
         <div class="impact-detail">Jenkins pipelines across 3+ concurrent releases, Splunk MCP for log triage</div>
       </div>
       <div class="impact-cell">
-        <div class="impact-stat">−20%</div>
+        <div class="impact-stat"><span data-count="20" data-prefix="−" data-suffix="%">−20%</span></div>
         <div class="impact-label">Sprint carry-over</div>
         <div class="impact-detail">5+ years as Scrum Master across 50+ releases, Certified ScrumMaster</div>
       </div>
       <div class="impact-cell">
-        <div class="impact-stat">Up to 8</div>
+        <div class="impact-stat"><span data-count="8" data-prefix="Up to ">Up to 8</span></div>
         <div class="impact-label">Junior QA engineers mentored</div>
         <div class="impact-detail">Onboarding, pairing on test design and automation code review, over 3+ years</div>
       </div>
@@ -521,6 +686,7 @@
 
   <!-- EXPERIENCE -->
   <section id="experience">
+    <p class="kicker">02 / Experience</p>
     <h2>Experience</h2>
     <p class="section-note">One role, deep — seven years building and running QA for the same integration platform. Expand a group to see the detail.</p>
     <div class="role-card">
@@ -618,13 +784,14 @@
 
   <!-- AI TOOLKIT -->
   <section id="ai-tools">
+    <p class="kicker">03 / AI toolkit</p>
     <h2>AI-augmented QA practice</h2>
     <p class="section-note">Agentic AI and MCP-based tooling built into daily QA work, not bolted on — each tool paired with a real outcome.</p>
 
     <div class="ai-banner">
-      <div class="ai-banner-stat"><span>30%</span>more automation coverage</div>
+      <div class="ai-banner-stat"><span data-count="30" data-suffix="%">30%</span>more automation coverage</div>
       <div class="ai-banner-div"></div>
-      <div class="ai-banner-stat"><span>40%</span>less test-authoring time</div>
+      <div class="ai-banner-stat"><span data-count="40" data-suffix="%">40%</span>less test-authoring time</div>
       <div class="ai-banner-div"></div>
       <div class="ai-banner-stat"><span>&lt;30m</span>build-failure diagnosis, down from 2h</div>
     </div>
@@ -670,13 +837,14 @@
 
   <!-- SCRUM MASTER -->
   <section id="scrum">
+    <p class="kicker">04 / Agile delivery</p>
     <h2>Scrum Master &amp; Agile delivery</h2>
     <p class="section-note">Certified Scrum Master running Agile delivery alongside the QA work above — the same seven years, not a separate track.</p>
 
     <div class="ai-banner">
-      <div class="ai-banner-stat"><span>50+</span>releases run through full Agile ceremonies, over 5+ years</div>
+      <div class="ai-banner-stat"><span data-count="50" data-suffix="+">50+</span>releases run through full Agile ceremonies, over 5+ years</div>
       <div class="ai-banner-div"></div>
-      <div class="ai-banner-stat"><span>−20%</span>sprint carry-over, better predictability</div>
+      <div class="ai-banner-stat"><span data-count="20" data-prefix="−" data-suffix="%">−20%</span>sprint carry-over, better predictability</div>
       <div class="ai-banner-div"></div>
       <div class="ai-banner-stat"><span>Up to 8</span>junior engineers mentored, 3+ yrs</div>
     </div>
@@ -708,6 +876,7 @@
 
   <!-- INTEGRATIONS -->
   <section id="integrations">
+    <p class="kicker">05 / Integrations</p>
     <h2>Where I've tested</h2>
     <p class="section-note">Five independent marketplace-to-NetSuite microservices, each with its own edge cases. Pick one to see what it involved.</p>
     <div class="tabbar" id="tabbar">
@@ -767,6 +936,7 @@
 
   <!-- SKILLS -->
   <section id="skills">
+    <p class="kicker">06 / Skills</p>
     <h2>Skills</h2>
     <p class="section-note">Grouped the way I actually use them day to day, from writing tests to running the pipeline that ships them.</p>
     <div class="skills-grid">
@@ -860,6 +1030,7 @@
 
   <!-- CERTS / EDUCATION -->
   <section id="credentials">
+    <p class="kicker">07 / Credentials</p>
     <h2>Certifications &amp; education</h2>
     <div class="two-col">
       <div class="cred-card">
@@ -877,32 +1048,46 @@
 
   <!-- CONTACT -->
   <section id="contact">
-    <h2>Get in touch</h2>
-    <p class="section-note">Hiring for a QA Automation Lead or Scrum Master role? Reach me directly below.</p>
-    <div class="contact-grid">
-      <div class="contact-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
-        <div><div class="c-label">Email</div><a class="c-value stretched" href="mailto:sashikanta397@gmail.com">sashikanta397@gmail.com</a></div>
-        <button class="copy-btn" type="button" data-copy="sashikanta397@gmail.com" aria-label="Copy email address">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
-        </button>
+    <div class="cta-panel">
+      <div class="cta-intro">
+        <p class="kicker">08 / Contact</p>
+        <h2>Get in touch</h2>
+        <p class="section-note">Hiring for a QA Automation Lead or Scrum Master role? Reach me directly below.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="mailto:sashikanta397@gmail.com?subject=Reaching%20out%20from%20your%20resume%20site">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
+            Email me
+          </a>
+          <a class="btn btn-ghost" href="resume.pdf" download="Sashikanta_Behera_Resume.pdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            Download resume (PDF)
+          </a>
+        </div>
+        <p class="cta-avail"><span class="live-dot" aria-hidden="true"></span>Immediately available to join</p>
       </div>
-      <a class="contact-cell" href="https://www.linkedin.com/in/sashikanta-behera" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.88 6 2.5 6S0 4.88 0 3.5 1.1 1 2.48 1s2.5 1.12 2.5 2.5zM.5 8.5h4V23h-4V8.5zm7.5 0h3.8v2h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1V23h-4v-6.7c0-1.6-.03-3.66-2.23-3.66-2.24 0-2.58 1.75-2.58 3.55V23h-4V8.5z"/></svg>
-        <div><div class="c-label">LinkedIn</div><div class="c-value">sashikanta-behera</div></div>
-      </a>
-      <a class="contact-cell" href="tel:+918456865369">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <div><div class="c-label">Phone</div><div class="c-value">+91 84568 65369</div></div>
-      </a>
-      <div class="contact-cell" style="cursor:default;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <div><div class="c-label">Location</div><div class="c-value">Hyderabad, India</div></div>
+      <div class="contact-list">
+        <div class="contact-row">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
+          <div class="c-text"><div class="c-label">Email</div><a class="c-value stretched" href="mailto:sashikanta397@gmail.com">sashikanta397@gmail.com</a></div>
+          <button class="copy-btn" type="button" data-copy="sashikanta397@gmail.com" aria-label="Copy email address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+          </button>
+        </div>
+        <a class="contact-row" href="https://www.linkedin.com/in/sashikanta-behera" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.88 6 2.5 6S0 4.88 0 3.5 1.1 1 2.48 1s2.5 1.12 2.5 2.5zM.5 8.5h4V23h-4V8.5zm7.5 0h3.8v2h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1V23h-4v-6.7c0-1.6-.03-3.66-2.23-3.66-2.24 0-2.58 1.75-2.58 3.55V23h-4V8.5z"/></svg>
+          <div class="c-text"><div class="c-label">LinkedIn</div><div class="c-value">sashikanta-behera</div></div>
+          <svg class="c-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <a class="contact-row" href="tel:+918456865369">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <div class="c-text"><div class="c-label">Phone</div><div class="c-value">+91 84568 65369</div></div>
+          <svg class="c-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+        </a>
+        <div class="contact-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="c-text"><div class="c-label">Location</div><div class="c-value">Hyderabad, India</div></div>
+        </div>
       </div>
-      <a class="contact-cell" href="resume.pdf" download="Sashikanta_Behera_Resume.pdf">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
-        <div><div class="c-label">Resume</div><div class="c-value">Download PDF</div></div>
-      </a>
     </div>
   </section>
 
@@ -1080,6 +1265,7 @@
   (function(){
     var progress = document.getElementById('progress');
     var toTop = document.getElementById('to-top');
+    var header = document.querySelector('header.topnav');
     var nav = document.querySelector('.topnav-links');
     var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
     var ticking = false;
@@ -1087,6 +1273,7 @@
       var max = document.documentElement.scrollHeight - window.innerHeight;
       progress.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
       toTop.classList.toggle('show', window.scrollY > window.innerHeight * 0.8);
+      header.classList.toggle('scrolled', window.scrollY > 8);
       ticking = false;
     }
     window.addEventListener('scroll', function(){
@@ -1111,21 +1298,75 @@
     document.querySelectorAll('main section[id]').forEach(function(sec){ spy.observe(sec); });
   })();
 
-  // Fade sections in as they scroll into view
+  // Fade sections in as they scroll into view; grid items stagger in one by one
   (function(){
-    var targets = document.querySelectorAll('main section:not(.hero) > *');
-    if (!('IntersectionObserver' in window)) {
-      targets.forEach(function(el){ el.classList.add('in'); });
-      return;
+    var grids = '.impact-grid, .ai-grid, .skills-grid, .contact-list, .two-col';
+    var targets = Array.prototype.slice.call(document.querySelectorAll('main section:not(.hero) > *'))
+      .filter(function(el){ return !el.matches(grids); })
+      .concat(Array.prototype.slice.call(document.querySelectorAll(
+        '.impact-grid > *, .ai-grid > *, .skills-grid > *, .contact-list > *, .two-col > *')));
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        el.classList.add('in');
+        io.unobserve(el);
+        // Drop the reveal classes once done so hover transforms work normally
+        setTimeout(function(){ el.classList.remove('reveal', 'in'); el.style.transitionDelay = ''; }, 900);
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    targets.forEach(function(el){
+      if (el.parentElement.matches(grids)) {
+        var i = Array.prototype.indexOf.call(el.parentElement.children, el);
+        el.style.transitionDelay = (i % 6) * 70 + 'ms';
+      }
+      el.classList.add('reveal');
+      io.observe(el);
+    });
+  })();
+
+  // Count numbers up from zero the first time they scroll into view
+  (function(){
+    var els = document.querySelectorAll('[data-count]');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    function run(el){
+      var end = +el.getAttribute('data-count');
+      var pre = el.getAttribute('data-prefix') || '';
+      var suf = el.getAttribute('data-suffix') || '';
+      var start = null, dur = 1200;
+      function step(t){
+        if (start === null) start = t;
+        var k = Math.min((t - start) / dur, 1);
+        el.textContent = pre + Math.round(end * (1 - Math.pow(1 - k, 3))) + suf;
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
     }
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if (!entry.isIntersecting) return;
-        entry.target.classList.add('in');
         io.unobserve(entry.target);
+        run(entry.target);
       });
-    }, { rootMargin: '0px 0px -8% 0px' });
-    targets.forEach(function(el){ el.classList.add('reveal'); io.observe(el); });
+    }, { threshold: 0.6 });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // Spotlight: track the pointer inside cards for the glow effect
+  (function(){
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    document.querySelectorAll('.impact-cell, .ai-card, .cred-card, .contact-row').forEach(function(card){
+      card.addEventListener('pointermove', function(e){
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+      card.addEventListener('pointerleave', function(){
+        card.style.removeProperty('--mx');
+        card.style.removeProperty('--my');
+      });
+    });
   })();
 </script>
 </body>
